@@ -1,6 +1,8 @@
 from data.dataset import TimeSeriesDataset
 from data.preprocessing import NumericalPreprocessing
 from search.base import BaseSearcher
+
+
 from similarity.base import BaseSimilarity
 from similarity.cosine import CosineSimilarity
 from similarity.dtw import DTW
@@ -81,39 +83,49 @@ def plot_ohlc(ohlc: np.ndarray, save_path: str = "ohlc_plot.png"):
 def main():
     # Example usage of TimeSeriesDataset
     data_path = 'datasets/1_hour/BTC-1Hour.csv'
-    preprocessing_function = NumericalPreprocessing.minmax_norm
-    
+    #preprocessing_function = NumericalPreprocessing.minmax_norm
+    #preprocessing_function = NumericalPreprocessing.backward_roc  # Example normalization function
+    preprocessing_function = NumericalPreprocessing.max_norm  # Example normalization function
     # Create a dataset instance
-    dataset = TimeSeriesDataset(data_path=data_path, preprocessing_function=preprocessing_function, fraction=0.05)
+    dataset = TimeSeriesDataset(data_path=data_path, preprocessing_function=preprocessing_function, fraction=0.01)
     
     # Get a specific sequence from the dataset
-    sequence = dataset.get(idx=100, sequence_length=50)
+    sequence = dataset.get(idx=400, sequence_length=50)
     print("First sequence:", sequence)
 
     # Choose similarity function
-    # sim_function = DTW()
+    sim_function = DTW()
     # sim_function = CosineSimilarity()
-    # sim_function = ManhattanSimilarity()
-    # sim_function = EuclideanSimilarity()
-    sim_function = CosineSimilarity()
+    #sim_function = ManhattanSimilarity()
+    #sim_function = EuclideanSimilarity()
+    # sim_function = CosineSimilarity()
 
     # Example usage of BaseSearcher
     searcher = BaseSearcher(search_space=dataset, similarity_function=sim_function)
-    results = searcher.search(query=sequence, top_k=30, stride=10, sequence_length=50)
+    results = searcher.search(query=sequence, top_k=20, stride=1, sequence_length=50)
     print("Top 5 similar sequences indices:", results)
 
     # --- automatic unique directory ---
     plot_dir = get_unique_plot_dir("plots")
 
     future_results = []
-    for idx in results:
-        idx = idx[0]
+    similarities = []
+    for idx,sim in results:
         future_sequence = searcher.get_future(idx=idx, sequence_length=50, future_sequence_length=10)
         future_results.append(future_sequence)
+        similarities.append(sim)
         plot_ohlc(future_sequence, save_path=os.path.join(plot_dir, f"future_sequence_{idx}.png"))
 
+    # weighted_prediction = np.average(future_results, axis=0, weights=similarities)
+    weighted_prediction = np.average(future_results, axis=0, weights=np.array(similarities) / np.sum(similarities))
+    prediction = weighted_prediction
+
+    plot_ohlc(prediction, save_path=os.path.join(plot_dir, "predicted_future_sequence.png"))
+    print("Future sequences plotted and saved.")
     #print("Future sequences for top results:", future_results)
     print(f"All plots saved under: {plot_dir}")
+
+
 
 
 if __name__ == "__main__":

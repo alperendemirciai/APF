@@ -65,3 +65,18 @@ class BaseSearcher:
             raise IndexError("Index and future sequence length exceed dataset length.")
         
         return self.search_space.get(idx, sequence_length + future_sequence_length)
+    
+    def get_prediction(self, idx: int, sequence_length:int = 30, future_sequence_length: int = 30) -> np.ndarray:
+        """
+        Get the prediction sequence from the dataset.
+        :param idx: Index to start from.
+        :param sequence_length: Length of the sequence to retrieve.
+        :return: Numpy array of the prediction sequence.
+        """
+        future = self.get_future(idx, sequence_length, future_sequence_length)
+        if future.size == 0:
+            return np.array([])
+        
+        future = future[-future_sequence_length:]
+        future = np.mean(future, axis=1)  # Average the future sequence
+        return future
