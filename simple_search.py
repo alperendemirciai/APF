@@ -22,6 +22,8 @@ from typing import Dict, Any, List
 
 def main(args:Dict[str, Any]=get_default_args()):
 
+    print("Arguments:", args)
+
     preprocessing_function = select_preprocessing_function(args.preprocessing_function)
     
     # Create a dataset instance
@@ -54,8 +56,12 @@ def main(args:Dict[str, Any]=get_default_args()):
     # --- automatic unique directory ---
     plot_dir = get_unique_plot_dir("plots")
 
-    plot_ohlc(sequence, save_path=os.path.join(plot_dir, "query_sequence.png"))
-    plot_ohlc(sequence_ft, save_path=os.path.join(plot_dir, "query_sequence_future.png"))
+    if args.plot_ohlc:
+        plot_ohlc(sequence, save_path=os.path.join(plot_dir, "query_sequence.png"))
+        plot_ohlc(sequence_ft, save_path=os.path.join(plot_dir, "query_sequence_future.png"))
+    else:
+        plot_series(sequence, save_path=os.path.join(plot_dir, "query_sequence.png"))
+        plot_series(sequence_ft, save_path=os.path.join(plot_dir, "query_sequence_future.png"))
 
     future_results = []
     similarities = []
@@ -63,13 +69,19 @@ def main(args:Dict[str, Any]=get_default_args()):
         future_sequence = searcher.get_future(idx=idx, sequence_length=args.sequence_length, future_sequence_length=args.future_length)
         future_results.append(future_sequence)
         similarities.append(sim)
-        plot_ohlc(future_sequence, save_path=os.path.join(plot_dir, f"future_sequence_{idx}.png"))
+        if args.plot_ohlc:
+            plot_ohlc(future_sequence, save_path=os.path.join(plot_dir, f"future_sequence_{idx}.png"))
+        else:
+            plot_series(future_sequence, save_path=os.path.join(plot_dir, f"future_sequence_{idx}.png"))
 
     # weighted_prediction = np.average(future_results, axis=0, weights=similarities)
     weighted_prediction = np.average(future_results, axis=0, weights=np.array(similarities) / np.sum(similarities))
     prediction = weighted_prediction
 
-    plot_ohlc(prediction, save_path=os.path.join(plot_dir, "predicted_future_sequence.png"))
+    if args.plot_ohlc:
+        plot_ohlc(prediction, save_path=os.path.join(plot_dir, "predicted_future_sequence.png"))
+    else:
+        plot_series(prediction, save_path=os.path.join(plot_dir, "predicted_future_sequence.png"))
     print("Future sequences plotted and saved.")
     #print("Future sequences for top results:", future_results)
     print(f"All plots saved under: {plot_dir}")

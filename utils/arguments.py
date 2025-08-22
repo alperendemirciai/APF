@@ -28,7 +28,8 @@ def get_default_args() -> Dict[str, Any]:
         'query_csv': None,
         'verbose': False,
         'save_hyperparams': False,
-        'save_plots': False
+        'save_plots': False,
+        'plot_ohlc': True
     }
 
 
@@ -52,6 +53,7 @@ def read_arguments() -> argparse.Namespace:
     parser.add_argument('--verbose', action='store_true', help='Enable verbose output')
     parser.add_argument('--save_hyperparams', action='store_true', help='Save hyperparameters to a file')
     parser.add_argument('--save_plots', action='store_true', help='Save plots of the query and future sequences')
+    parser.add_argument('--plot_ohlc', action='store_true', help='Plot OHLC charts instead of line plots')
 
     return parser.parse_args()
 
