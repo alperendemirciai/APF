@@ -7,16 +7,16 @@ from data.preprocessing import NumericalPreprocessing
 
 
 class TimeSeriesDataset:
-    def __init__(self, data_path:str=None, preprocessing_function:NumericalPreprocessing=None, fraction:float=1.0) -> None:
+    def __init__(self, data_path:str=None, preprocessing_function:NumericalPreprocessing=None, fraction:float=1.0, columns:List[str]=None) -> None:
         assert data_path.endswith('.csv'), "Data path must be a CSV file."
         assert os.path.exists(data_path), "Data path does not exist."
 
         self.data_path = data_path
-        self.data = self.__load_data(data_path, fraction)
+        self.data = self.__load_data(data_path, fraction, columns)
         self.fraction = fraction
         self.preprocessing_function = preprocessing_function if preprocessing_function else lambda x: x
 
-    def __load_data(self, data_path:str=None, fraction:float=1.0) -> pd.DataFrame:
+    def __load_data(self, data_path:str=None, fraction:float=1.0, columns:List[str]=None) -> pd.DataFrame:
         """
         Load the dataset from the specified path.
         :param data_path: Path to the dataset file.
@@ -31,9 +31,12 @@ class TimeSeriesDataset:
             data.set_index('date', inplace=True)
         if fraction < 1.0:
             data = data.iloc[:int(data.shape[0] * fraction)]
-        #cols = data.columns.tolist()
-        #data.drop([col for col in cols if col != 'close'], inplace=True, axis=1)
-        data.drop("volume", axis=1, inplace=True, errors='ignore')
+
+        if columns is not None and all(col in data.columns for col in columns):
+            data = data[columns]
+        elif columns is not None:
+            raise ValueError(f"Some columns {columns} are not present in the dataset. Available columns: {data.columns.tolist()}")
+        
         print(f"Data shape after loading and preprocessing: {data.shape}")
         return data
 
