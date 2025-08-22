@@ -23,7 +23,7 @@ class BaseSearcher:
         self.search_space = search_space
         self.similarity_function = similarity_function 
 
-    def search(self, query: np.ndarray, top_k: int = 10, stride:int = 1, sequence_length:int = 30) -> List[int]:
+    def search(self, query: np.ndarray, top_k: int = 10, stride:int = 1, sequence_length:int = 30, verbose:bool=True) -> List[int]:
         """
         Search for the top_k most similar items to the query in the search space.
         :param query: A numpy array representing the query item.
@@ -37,7 +37,7 @@ class BaseSearcher:
         print(f"Self.search_space: {len(self.search_space)}")
         for idx in range(0, len(self.search_space), stride):
             #print(f"Processing index: {idx}")
-            if idx % 50 == 0:
+            if idx % 50 == 0 and verbose:
                 print(f"Processing index: {idx} of {len(self.search_space)}")
             if idx + sequence_length > len(self.search_space):
                 break
